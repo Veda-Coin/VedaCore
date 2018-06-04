@@ -1,0 +1,67 @@
+#!/bin/bash
+#
+#  vedad The Veda Core server.
+#
+#
+# chkconfig: 345 80 20
+# description: vedad
+# processname: vedad
+#
+
+# Source function library.
+. /etc/init.d/functions
+
+# you can override defaults in /etc/sysconfig/vedad, see below
+if [ -f /etc/sysconfig/vedad ]; then
+        . /etc/sysconfig/vedad
+fi
+
+RETVAL=0
+
+prog=vedad
+# you can override the lockfile via BITCOIND_LOCKFILE in /etc/sysconfig/vedad
+lockfile=${BITCOIND_LOCKFILE-/var/lock/subsys/vedad}
+
+# vedad defaults to /usr/bin/vedad, override with BITCOIND_BIN
+vedad=${BITCOIND_BIN-/usr/bin/vedad}
+
+# vedad opts default to -disablewallet, override with BITCOIND_OPTS
+vedad_opts=${BITCOIND_OPTS--disablewallet}
+
+start() {
+    echo -n $"Starting $prog: "
+    daemon $DAEMONOPTS $vedad $vedad_opts
+    RETVAL=$?
+    echo
+    [ $RETVAL -eq 0 ] && touch $lockfile
+    return $RETVAL
+}
+
+stop() {
+    echo -n $"Stopping $prog: "
+    killproc $prog
+    RETVAL=$?
+    echo
+    [ $RETVAL -eq 0 ] && rm -f $lockfile
+    return $RETVAL
+}
+
+case "$1" in
+    start)
+        start
+        ;;
+    stop)
+        stop
+        ;;
+    status)
+        status $prog
+        ;;
+    restart)
+        stop
+        start
+        ;;
+    *)
+        echo "Usage: service $prog {start|stop|status|restart}"
+        exit 1
+        ;;
+esac
